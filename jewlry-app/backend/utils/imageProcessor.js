@@ -4,7 +4,7 @@ const fs = require('fs');
 
 function removeBackground(inputImagePath, outputImagePath) {
   return new Promise((resolve, reject) => {
-    exec(`rembg i "${inputImagePath}" "${outputImagePath}"`, (error, stdout, stderr) => {
+    exec(`rembg i -m u2netp "${inputImagePath}" "${outputImagePath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing rembg: ${error.message}`);
         reject(error);
