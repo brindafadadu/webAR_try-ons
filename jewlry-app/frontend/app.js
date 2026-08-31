@@ -39,6 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectorContainer.innerHTML = '';
    selectorContainer.appendChild(heading);
+   const noneButton = document.createElement('button');
+    noneButton.className = 'earring-option';
+    noneButton.innerHTML = `<span>None</span>`;
+    noneButton.addEventListener('click', () => {
+      window.selectEarring(null);
+    });
+    selectorContainer.appendChild(noneButton);
 
     // Create buttons for each earring
     earrings.forEach(earring => {
@@ -131,6 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectorContainer.innerHTML = '';
     selectorContainer.appendChild(heading);
+
+    const noneButton = document.createElement('button');
+    noneButton.className = 'earring-option';
+    noneButton.innerHTML = `<span>None</span>`;
+    noneButton.addEventListener('click', () => {
+      window.selectNosepin(null);
+    });
+    selectorContainer.appendChild(noneButton);
 
     // Create buttons for each nose pin
     nosepins.forEach(nosepin => {

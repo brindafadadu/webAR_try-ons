@@ -1,21 +1,46 @@
 const videoElement = document.getElementById('video');
 const canvasElement = document.getElementById('canvas');
 const canvasCtx = canvasElement.getContext('2d');
+function syncCanvasToVideo() {
+    if (videoElement.videoWidth && videoElement.videoHeight) {
+        canvasElement.width = videoElement.videoWidth;
+        canvasElement.height = videoElement.videoHeight;
+    }
+}
+videoElement.addEventListener('loadedmetadata', syncCanvasToVideo);
 
 const jewlImage = new Image();
 const noseImage = new Image();
+let earringActive = false;
+let nosepinActive = false;
 //jewlImage.src = 'backend/public/earrings.png'; 
 
 let inti_noseX = null;
 
 window.selectEarring = function(earring) {
-    jewlImage.src = earring.processedImageUrl; // Update the source of the earring image
+    if(earring == null){
+        earringActive = false;
+    }
+    else{
+        jewlImage.src = earring.processedImageUrl; // Update the source of the earring image
+        earringActive = true;
+    }
+    
 }
 window.selectNosepin = function(nosepin) {
-    noseImage.src = nosepin.processedImageUrl; // Update the source of the nosepin image
+    if (nosepin === null) {
+        nosepinActive = false;
+    } else {
+        noseImage.src = nosepin.processedImageUrl;
+        nosepinActive = true;
+    }
 }
 
 function onResults(results) {
+    if (canvasElement.width === 0 || canvasElement.height === 0) {
+        syncCanvasToVideo();
+        if (canvasElement.width === 0 || canvasElement.height === 0) return;
+    }
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
@@ -53,7 +78,7 @@ function onResults(results) {
             const leftY = leftEarBase.y * canvasElement.height - (earringSize / 2);
 
             // Right earring positioned on right ear base with additional horizontal offset
-            const rightX = rightEarBase.x * canvasElement.width - (earringSize / 2) + horizontalSeparation;
+            const rightX = rightEarBase.x * canvasElement.width - (earringSize / 2) + horizontalSeparation/2;
             const rightY = rightEarBase.y * canvasElement.height - (earringSize / 2);
 
             // Calculate nose pin size and position
@@ -63,55 +88,64 @@ function onResults(results) {
 
             if(noseOffset < -headturn){
                 //Head turned right so hide the left earring
-                canvasCtx.drawImage(
-                    jewlImage,
-                    rightX,
-                    rightY,
-                    earringSize,
-                    earringSize
-                );
+                if (earringActive) {
+                    canvasCtx.drawImage(
+                        jewlImage,
+                        rightX,
+                        rightY,
+                        earringSize,
+                        earringSize
+                    );
+                }
             }
 
             else if (noseOffset>headturn){
                 // Head turned left so hide the right earring
-                canvasCtx.drawImage(
-                    jewlImage,
-                    leftX,
-                    leftY,
-                    earringSize,
-                    earringSize
-                );
+                if( earringActive) {
+                    canvasCtx.drawImage(
+                        jewlImage,
+                        leftX,
+                        leftY,
+                        earringSize,
+                        earringSize
+                    );
+                }
             }
 
             // Head facing forward draw both earrings
             else{ 
-                canvasCtx.drawImage(
-                jewlImage,
-                leftX,
-                leftY,
-                earringSize,
-                earringSize
-            );
+            
+                if( earringActive) {
+                    canvasCtx.drawImage(
+                        jewlImage,
+                        leftX,
+                        leftY,
+                        earringSize,
+                        earringSize
+                    );
 
-            // Draw right earring
-                canvasCtx.drawImage(
-                    jewlImage,
-                    rightX,
-                    rightY,
-                    earringSize,
-                    earringSize
-                );
+                // Draw right earring
+                    canvasCtx.drawImage(
+                        jewlImage,
+                        rightX,
+                        rightY,
+                        earringSize,
+                        earringSize
+                    );
+                }
             }
 
             // Draw nose pin (always shown regardless of head turn)
             if (noseImage.src) {
-                canvasCtx.drawImage(
-                    noseImage,
-                    noseX,
-                    noseY,
-                    nosePinSize,
-                    nosePinSize
-                );
+                if (nosepinActive) {
+                    canvasCtx.drawImage(
+                        noseImage,
+                        noseX,
+                        noseY,
+                        nosePinSize,
+                        nosePinSize
+                    );
+                }
             }
         }
     }
