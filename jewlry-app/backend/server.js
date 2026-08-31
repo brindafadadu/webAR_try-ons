@@ -7,7 +7,8 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const mongoose = require('mongoose');
-const earringsRoutes = require('./routes/earringRoutes');  
+const earringsRoutes = require('./routes/earringRoutes'); 
+const nosepinRoutes = require('./routes/nosepinRoutes'); 
 
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/images/processed', express.static(path.join(__dirname, 'public', 'imag
 
 //using earring routes
 app.use(earringsRoutes);
+app.use(nosepinRoutes);
 
 // Default route to serve index2.html
 app.get('/', (req, res) => {

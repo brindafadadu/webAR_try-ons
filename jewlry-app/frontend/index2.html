@@ -3,41 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- 
-  <title> Try On Jewellery </title>
+
+  <title>Try On Jewellery</title>
   <link rel="stylesheet" href="style_jewl.css">
-   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 </head>
 <body>
   <div class="container">
+    <h1 class="app-title">Virtual Jewellery Try-On</h1>
+
     <div class="video-container">
-      <video id="video" autoplay muted></video>
+      <video id="video" autoplay muted playsinline></video>
       <canvas id="canvas"></canvas>
     </div>
-    
-    <div id="earring-selector" class="earring-selector">
-      <h3>Select Earrings</h3>
-      <div id="upload-form" class="upload-section">
-        <h3>Upload Your Own Earrings</h3>
-        <form id="earring-upload-form" enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="earring-name">Earring Name:</label>
-            <input type="text" id="earring-name" name="name" required>
+
+    <div class="jewelry-tabs">
+      <button type="button" class="tab-btn active" data-tab="earring-panel">Earrings</button>
+      <button type="button" class="tab-btn" data-tab="nosepin-panel">Nose Pins</button>
+    </div>
+
+    <div id="earring-panel" class="tab-panel active">
+      <div id="earring-selector" class="earring-selector">
+        <h3>Select Earrings</h3>
+        <div id="upload-form" class="upload-section">
+          <h3>Upload Your Own Earrings</h3>
+          <form id="earring-upload-form" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="earring-name">Earring Name:</label>
+              <input type="text" id="earring-name" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="earring-image">Image:</label>
+              <input type="file" id="earring-image" name="image" accept="image/*" required>
+            </div>
+            <button type="submit" class="upload-btn">Upload</button>
+          </form>
+          <div id="upload-progress-container" class="upload-progress-container" style="display:none;">
+            <div id="upload-progress-bar" class="upload-progress-bar">0%</div>
           </div>
-          <div class="form-group">
-            <label for="earring-image">Image:</label>
-            <input type="file" id="earring-image" name="image" accept="image/*" required>
+          <div id="upload-status" class="upload-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="nosepin-panel" class="tab-panel">
+      <div id="nosepin-selector" class="earring-selector">
+        <h3>Select Nose Pins</h3>
+        <div id="nosepin-upload-form" class="upload-section">
+          <h3>Upload Your Own Nose Pin</h3>
+          <form id="nosepin-upload-form-el" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="nosepin-name">Nose Pin Name:</label>
+              <input type="text" id="nosepin-name" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="nosepin-image">Image:</label>
+              <input type="file" id="nosepin-image" name="image" accept="image/*" required>
+            </div>
+            <button type="submit" class="upload-btn">Upload</button>
+          </form>
+          <div id="nosepin-upload-progress-container" class="upload-progress-container" style="display:none;">
+            <div id="nosepin-upload-progress-bar" class="upload-progress-bar">0%</div>
           </div>
-          <button type="submit" class="upload-btn">Upload</button>
-        </form>
-        <div id="upload-status" class="upload-status"></div>
+          <div id="nosepin-upload-status" class="upload-status"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="earrings.js"></script>
   <script src="app.js"></script>
-</body> 
+</body>
 </html>
