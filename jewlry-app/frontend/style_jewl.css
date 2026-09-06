@@ -52,6 +52,7 @@ body {
   transform: scaleX(-1);
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  cursor: grabbing;
 }
 
 @media (max-width: 480px) {
