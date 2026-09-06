@@ -31,15 +31,19 @@ const MAX_SCALE_FACTOR = 1.6;
 const GUIDE_BOX_WIDTH_RATIO = 0.35;
 const GUIDE_BOX_HEIGHT_RATIO = 0.55;
 
-// --- NEW: DRAG-TO-REPOSITION STATE ---
+// --- DRAG-TO-REPOSITION STATE ---
 let earringOffsets = {
     left: { dx: 0, dy: 0 },
     right: { dx: 0, dy: 0 }
 };
-let lastEarringRects = { left: null, right: null }; // updated every frame for hit-testing
-let dragState = null; // { ear, startX, startY, startOffsetX, startOffsetY }
+// NEW: nose pin offset (single item, not left/right)
+let nosepinOffset = { dx: 0, dy: 0 };
 
-// --- NEW: ANALYZE IMAGE PADDING ON LOAD ---
+let lastEarringRects = { left: null, right: null }; // updated every frame for hit-testing
+let lastNosepinRect = null; // NEW: updated every frame for nose pin hit-testing
+let dragState = null; // { item: 'left' | 'right' | 'nosepin', startX, startY, startOffsetX, startOffsetY }
+
+// --- ANALYZE IMAGE PADDING ON LOAD ---
 jewlImage.onload = function() {
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
@@ -93,7 +97,7 @@ window.selectNosepin = function(nosepin) {
     }
 }
 
-// --- NEW: DRAW THE FACE POSITIONING GUIDE BOX ---
+// --- DRAW THE FACE POSITIONING GUIDE BOX ---
 function drawGuideBox() {
     const boxWidth = canvasElement.width * GUIDE_BOX_WIDTH_RATIO;
     const boxHeight = canvasElement.height * GUIDE_BOX_HEIGHT_RATIO;
@@ -108,7 +112,7 @@ function drawGuideBox() {
     canvasCtx.restore();
 }
 
-// --- NEW: DRAG HELPERS ---
+// --- DRAG HELPERS ---
 // Converts a mouse/touch client coordinate into the canvas's internal pixel
 // coordinate space, accounting for the CSS scaleX(-1) mirror on #canvas.
 function getCanvasInternalCoords(clientX, clientY) {
@@ -120,7 +124,14 @@ function getCanvasInternalCoords(clientX, clientY) {
     return { x: internalX, y: internalY };
 }
 
-function hitTestEarring(x, y) {
+function hitTestItems(x, y) {
+    // Check nose pin first since it's smaller and easy to miss if checked last
+    if (lastNosepinRect) {
+        const r = lastNosepinRect;
+        if (x >= r.x && x <= r.x + r.size && y >= r.y && y <= r.y + r.size) {
+            return 'nosepin';
+        }
+    }
     for (const ear of ['left', 'right']) {
         const rect = lastEarringRects[ear];
         if (!rect) continue;
@@ -131,17 +142,23 @@ function hitTestEarring(x, y) {
     return null;
 }
 
+function getOffsetFor(item) {
+    if (item === 'nosepin') return nosepinOffset;
+    return earringOffsets[item];
+}
+
 function handleDragStart(clientX, clientY) {
-    if (!earringActive) return;
+    if (!earringActive && !nosepinActive) return;
     const { x, y } = getCanvasInternalCoords(clientX, clientY);
-    const hitEar = hitTestEarring(x, y);
-    if (hitEar) {
+    const hitItem = hitTestItems(x, y);
+    if (hitItem) {
+        const currentOffset = getOffsetFor(hitItem);
         dragState = {
-            ear: hitEar,
+            item: hitItem,
             startX: x,
             startY: y,
-            startOffsetX: earringOffsets[hitEar].dx,
-            startOffsetY: earringOffsets[hitEar].dy
+            startOffsetX: currentOffset.dx,
+            startOffsetY: currentOffset.dy
         };
     }
 }
@@ -151,8 +168,9 @@ function handleDragMove(clientX, clientY) {
     const { x, y } = getCanvasInternalCoords(clientX, clientY);
     const deltaX = x - dragState.startX;
     const deltaY = y - dragState.startY;
-    earringOffsets[dragState.ear].dx = dragState.startOffsetX + deltaX;
-    earringOffsets[dragState.ear].dy = dragState.startOffsetY + deltaY;
+    const offset = getOffsetFor(dragState.item);
+    offset.dx = dragState.startOffsetX + deltaX;
+    offset.dy = dragState.startOffsetY + deltaY;
 }
 
 function handleDragEnd() {
@@ -199,20 +217,24 @@ function onResults(results) {
 
             const paddingAdjustmentPixels = earringSize * jewlTopPaddingFactor;
 
-            // Apply the padding offset, then the user's manual drag offset, on top of the tracked position
+            // Apply padding offset, then the user's manual drag offset, on top of the tracked position
             const leftX = leftEarBase.x * canvasElement.width - (earringSize / 2) - horizontalSeparation + earringOffsets.left.dx;
             const leftY = leftEarBase.y * canvasElement.height - paddingAdjustmentPixels + earringOffsets.left.dy;
 
             const rightX = rightEarBase.x * canvasElement.width - (earringSize / 2) + horizontalSeparation/2 + earringOffsets.right.dx;
             const rightY = rightEarBase.y * canvasElement.height - paddingAdjustmentPixels + earringOffsets.right.dy;
 
-            // NEW: remember where each earring was drawn this frame, for drag hit-testing
+            // Remember where each earring was drawn this frame, for drag hit-testing
             lastEarringRects.left = { x: leftX, y: leftY, size: earringSize };
             lastEarringRects.right = { x: rightX, y: rightY, size: earringSize };
 
             const nosePinSize = Math.min(canvasElement.width, canvasElement.height) * 0.05;
-            const noseX = leftNostril.x * canvasElement.width - (nosePinSize / 2);
-            const noseY = leftNostril.y * canvasElement.height - (nosePinSize / 2);
+            // NEW: nose pin drag offset applied on top of tracked position
+            const noseX = leftNostril.x * canvasElement.width - (nosePinSize / 2) + nosepinOffset.dx;
+            const noseY = leftNostril.y * canvasElement.height - (nosePinSize / 2) + nosepinOffset.dy;
+
+            // NEW: remember where the nose pin was drawn this frame, for drag hit-testing
+            lastNosepinRect = { x: noseX, y: noseY, size: nosePinSize };
 
             // 4. SAFETY CHECKS: Ensure images are fully loaded before drawing to prevent crashes
             const canDrawEarring = earringActive && jewlImage.complete && jewlImage.naturalWidth !== 0;
@@ -269,7 +291,7 @@ const camera = new Camera(videoElement, {
 
 camera.start();
 
-// --- NEW: DRAG EVENT LISTENERS (mouse + touch) ---
+// --- DRAG EVENT LISTENERS (mouse + touch) ---
 canvasElement.addEventListener('mousedown', (e) => handleDragStart(e.clientX, e.clientY));
 canvasElement.addEventListener('mousemove', (e) => handleDragMove(e.clientX, e.clientY));
 window.addEventListener('mouseup', handleDragEnd);
