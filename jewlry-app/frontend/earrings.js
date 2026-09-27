@@ -35,7 +35,8 @@ const GUIDE_BOX_HEIGHT_RATIO = 0.55;
 // SMOOTHING_FACTOR: 0-1. Lower = smoother but more lag between real motion and
 // rendered position. Higher = snappier but more visible jitter. 0.4 is a
 // reasonable starting point; tune per feel.
-const SMOOTHING_FACTOR = 0.4;
+const SMOOTHING_FACTOR = 0.5;
+const DRAG_SMOOTHING_FACTOR = 0.75;
 // How long (ms) to keep drawing jewelry at the last known position after
 // FaceMesh briefly loses the face (hand pass, fast turn, bad frame) before
 // treating tracking as actually lost.
@@ -175,18 +176,18 @@ function getCanvasInternalCoords(clientX, clientY) {
     return { x: internalX, y: internalY };
 }
 
-function hitTestItems(x, y) {
+function hitTestItems(x, y, touchPadding = 0) {
     // Check nose pin first since it's smaller and easy to miss if checked last
     if (lastNosepinRect) {
         const r = lastNosepinRect;
-        if (x >= r.x && x <= r.x + r.size && y >= r.y && y <= r.y + r.size) {
+        if (x >= r.x - touchPadding && x <= r.x + r.size + touchPadding && y >= r.y - touchPadding && y <= r.y + r.size + touchPadding) {
             return 'nosepin';
         }
     }
     for (const ear of ['left', 'right']) {
         const rect = lastEarringRects[ear];
         if (!rect) continue;
-        if (x >= rect.x && x <= rect.x + rect.size && y >= rect.y && y <= rect.y + rect.size) {
+        if (x >= rect.x - touchPadding && x <= rect.x + rect.size + touchPadding && y >= rect.y - touchPadding && y <= rect.y + rect.size + touchPadding) {
             return ear;
         }
     }
@@ -198,10 +199,10 @@ function getOffsetFor(item) {
     return earringOffsets[item];
 }
 
-function handleDragStart(clientX, clientY) {
+function handleDragStart(clientX, clientY, touchPadding = 0) {
     if (!earringActive && !nosepinActive) return;
     const { x, y } = getCanvasInternalCoords(clientX, clientY);
-    const hitItem = hitTestItems(x, y);
+    const hitItem = hitTestItems(x, y, touchPadding);
     if (hitItem) {
         const currentOffset = getOffsetFor(hitItem);
         dragState = {
@@ -217,11 +218,12 @@ function handleDragStart(clientX, clientY) {
 function handleDragMove(clientX, clientY) {
     if (!dragState) return;
     const { x, y } = getCanvasInternalCoords(clientX, clientY);
-    const deltaX = x - dragState.startX;
-    const deltaY = y - dragState.startY;
+    const targetDx = dragState.startOffsetX + (x - dragState.startX);
+    const targetDy = dragState.startOffsetY + (y - dragState.startY);
     const offset = getOffsetFor(dragState.item);
-    offset.dx = dragState.startOffsetX + deltaX;
-    offset.dy = dragState.startOffsetY + deltaY;
+    // Lerp toward target for smoother feel on touch
+    offset.dx += (targetDx - offset.dx) * DRAG_SMOOTHING_FACTOR;
+    offset.dy += (targetDy - offset.dy) * DRAG_SMOOTHING_FACTOR;
 }
 
 function handleDragEnd() {
@@ -360,7 +362,7 @@ window.addEventListener('mouseup', handleDragEnd);
 
 canvasElement.addEventListener('touchstart', (e) => {
     if (e.touches.length > 0) {
-        handleDragStart(e.touches[0].clientX, e.touches[0].clientY);
+        handleDragStart(e.touches[0].clientX, e.touches[0].clientY, 20);
         if (dragState) e.preventDefault();
     }
 }, { passive: false });

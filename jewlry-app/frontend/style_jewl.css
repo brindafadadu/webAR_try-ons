@@ -57,8 +57,12 @@ body {
 }
 
 @media (max-width: 480px) {
-  body { padding: 12px 10px 32px; }
+  body { padding: 12px 6px 32px; }
+  .container { max-width: 100%; }
   .app-title { font-size: 1.3rem; }
+  .video-container { aspect-ratio: 3 / 4; border-radius: 12px; }
+  .earring-selector { padding: 12px; }
+  .upload-section { padding: 12px; }
 }
 
 .jewelry-tabs {
