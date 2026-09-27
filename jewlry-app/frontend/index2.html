@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <title>Try On Jewellery</title>
   <link rel="stylesheet" href="style_jewl.css">
@@ -13,6 +13,8 @@
 <body>
   <div class="container">
     <h1 class="app-title">Virtual Jewellery Try-On</h1>
+
+    <div id="camera-permission-message" style="display:none;"></div>
 
     <div class="video-container">
       <video id="video" autoplay muted playsinline></video>

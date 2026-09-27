@@ -53,6 +53,7 @@ body {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   cursor: grabbing;
+  touch-action: none;
 }
 
 @media (max-width: 480px) {
@@ -181,4 +182,15 @@ body {
   margin-bottom: 10px;
   font-weight: 600;
   color: #4a3d63;
+}
+
+#camera-permission-message {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background-color: #f8d7da;
+  color: #721c24;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
