@@ -39,6 +39,21 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname,'../frontend', 'index2.html'));
 });
 
+// Error handling middleware for Multer and other errors
+app.use((err, req, res, next) => {
+    console.error('Unhandled server error:', err);
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'File size too large. Maximum allowed size is 25MB.' });
+        }
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
+    }
+    if (err) {
+        return res.status(400).json({ error: err.message || 'An unexpected error occurred.' });
+    }
+    next();
+});
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

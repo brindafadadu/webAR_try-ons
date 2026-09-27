@@ -36,7 +36,7 @@ const fileFilter = function (req, file, cb) {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 25 * 1024 * 1024 }
 });
 
 router.post('/api/upload-nosepin', upload.single('image'), async (req, res) => {
@@ -55,8 +55,9 @@ router.post('/api/upload-nosepin', upload.single('image'), async (req, res) => {
       fs.mkdirSync(processedDir, { recursive: true });
     }
 
-    const noBgPath = path.join(processedDir, `nobg_${filename}`);
-    const normalizedFilename = `norm_${path.parse(filename).name}.png`;
+    const baseName = path.parse(filename).name;
+    const noBgPath = path.join(processedDir, `nobg_${baseName}.png`);
+    const normalizedFilename = `norm_${baseName}.png`;
     const outputPath = path.join(processedDir, normalizedFilename);
 
     await removeBackground(originalPath, noBgPath);

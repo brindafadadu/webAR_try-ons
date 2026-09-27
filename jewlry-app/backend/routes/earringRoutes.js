@@ -59,7 +59,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
+    fileSize: 25 * 1024 * 1024, // 25MB max file size for high-res mobile photos
   }
 });
 router.post('/api/upload', upload.single('image'), async (req, res) => {
@@ -85,15 +85,17 @@ router.post('/api/upload', upload.single('image'), async (req, res) => {
       fs.mkdirSync(processedDir, { recursive: true });
     }
     
-    // Set output path for processed image
-    const outputPath = path.join(processedDir, `nobg_${filename}`);
+    // Set output path for processed image (always .png for transparency)
+    const baseName = path.parse(filename).name;
+    const outputFilename = `nobg_${baseName}.png`;
+    const outputPath = path.join(processedDir, outputFilename);
     
     // Process the image
     await removeBackground(originalPath, outputPath);
     
     // Create relative paths for storage in the database
-    const originalRelativePath = `/images/uploads/${filename}`;  // Fixed: using filename instead of imagePath
-    const processedRelativePath = `/images/processed/nobg_${filename}`;
+    const originalRelativePath = `/images/uploads/${filename}`;
+    const processedRelativePath = `/images/processed/${outputFilename}`;
     
     // Save to database
     const newEarring = new Earring({

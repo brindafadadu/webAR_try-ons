@@ -92,9 +92,21 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Server response status:', response.status);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Upload error response:', errorData);
-        throw new Error(errorData.error || 'Upload failed');
+        let errorMsg = `Upload failed (${response.status})`;
+        try {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorData.message || errorMsg;
+          } else {
+            const text = await response.text();
+            const match = text.match(/<pre>([\s\S]*?)<\/pre>/i) || text.match(/<title>([\s\S]*?)<\/title>/i);
+            errorMsg = match ? match[1].trim() : (text.slice(0, 120) || errorMsg);
+          }
+        } catch (_) {
+          errorMsg = `Server error (${response.status})`;
+        }
+        throw new Error(errorMsg);
       }
       
       const result = await response.json();
@@ -192,9 +204,21 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Server response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Upload error response:', errorData);
-        throw new Error(errorData.error || 'Upload failed');
+        let errorMsg = `Upload failed (${response.status})`;
+        try {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorData.message || errorMsg;
+          } else {
+            const text = await response.text();
+            const match = text.match(/<pre>([\s\S]*?)<\/pre>/i) || text.match(/<title>([\s\S]*?)<\/title>/i);
+            errorMsg = match ? match[1].trim() : (text.slice(0, 120) || errorMsg);
+          }
+        } catch (_) {
+          errorMsg = `Server error (${response.status})`;
+        }
+        throw new Error(errorMsg);
       }
 
       const result = await response.json();
