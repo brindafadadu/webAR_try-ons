@@ -9,11 +9,10 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const earringsRoutes = require('./routes/earringRoutes'); 
 const nosepinRoutes = require('./routes/nosepinRoutes'); 
-
+const vendorRoutes = require('./routes/vendorRoutes'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -22,17 +21,29 @@ mongoose.connect(process.env.MONGO_URI, {
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-app.use(cors());
+// Enable full CORS so external vendor storefronts can query the API and embed the widget
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../frontend')));
+app.use('/sdk', express.static(path.join(__dirname, '../frontend/sdk')));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use('/images/uploads', express.static(path.join(__dirname, 'public', 'images', 'uploads')));
 app.use('/images/processed', express.static(path.join(__dirname, 'public', 'images', 'processed')));
 
-//using earring routes
+// Mounting routes
 app.use(earringsRoutes);
 app.use(nosepinRoutes);
+app.use(vendorRoutes);
+
+// Embeddable try-on widget route for vendor iframes
+app.get('/embed', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend', 'embed.html'));
+});
 
 // Default route to serve index2.html
 app.get('/', (req, res) => {
